@@ -29,7 +29,7 @@ def distribute(oranges, plates):
 def initialise():
     sg.theme('Tan Blue')
     layout = [
-        [sg.Image(r'/Users/salvo/Desktop/GT Sport/LogoSI.png')],
+        [sg.Image("""PERCORSO ALL'IMMAGINE SCUDERIA ITALIA""")],
         [sg.Text('GT Sport Pit Strategy Calculator', size=(35, 1), justification='center', font=("Helvetica", 25))],
         [sg.Frame(layout=[
             [sg.Text('Total Race Laps'), sg.InputText('30', key="TotalLapNumber", size=(8, 10), justification='Right')],
