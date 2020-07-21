@@ -2,15 +2,9 @@ import PySimpleGUI as sg
 import datetime
 import pandas as pd
 import numpy as np
-import itertools
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 percent = lambda part, whole: float(whole) / 100 * float(part)
-
-def get_sec(time_str):
-    # Trasforma minuti in secondi
-    h, m, s, t = time_str.split(':')
-    return int(h) * 3600 + int(m) * 60 + int(s) + 0.001 * int(t)
 
 def distribute(oranges, plates):
     base, extra = divmod(oranges, plates)  # extra < plates
@@ -96,8 +90,6 @@ class operations():
                 self.LapChart['Pit'][i] = "NO"
                 self.LapChart['TyreChange'][i] = "NO"
 
-
-
 ########
 ######## FUEL CONSUMPTION AND PIT STOP PLANNER
 ########
@@ -169,7 +161,7 @@ class operations():
     def addFuel(self):
         for i in range(1, self.totalLapNumber+1):
             if self.LapChart['Pit'][i] == "YES":
-                self.LapChart['FuelAdded'][i] = self.LapChart['FuelRemaining'][i] - (self.LapChart['FuelRemaining'][i-1] - self.LapChart['ConsumedFuelPerLap'][i])
+                self.LapChart['FuelAdded'][i] = abs(self.LapChart['FuelRemaining'][i] - (self.LapChart['FuelRemaining'][i-1] - self.LapChart['ConsumedFuelPerLap'][i]))
                 self.LapChart['FuelAdded'][i] = round(self.LapChart['FuelAdded'][i], 1)
             else:
                 self.LapChart['FuelAdded'][i] = "-"
@@ -218,56 +210,68 @@ class operations():
         # ------ Make the Table Data ------
 
         columm_layout = [
-            [sg.Text(self.LapChart.iloc[lap, 0], size=(3, 1), justification='right', key="_LAPNUMBER_",
+            [sg.Text(self.LapChart.iloc[lap, 0], size=(5, 1), justification='right', key="_LAPNUMBER_",
                      enable_events=True)] +
-            [sg.InputCombo(values=[j for j in range(1, 7)], default_value=self.LapChart.iloc[lap, 3], size=(3, 1),
+            [sg.InputCombo(values=[j for j in range(1, 7)], default_value=self.LapChart.iloc[lap, 3], size=(8, 1),
                            key='_ENGINEMODE', enable_events=True)] +
-            [sg.Text(round(self.LapChart.iloc[lap, 10], 1), size=(10, 1), justification='right', key="FUELCONSUMED",
+            [sg.Text(round(self.LapChart.iloc[lap, 10], 1), size=(4, 1), justification='right', key="FUELCONSUMED",
                      enable_events=True)] +
-            [sg.Text(float(self.LapChart.iloc[lap, 4]), size=(4, 1), key="_FUELREMAINING", enable_events=True)] +
-            [sg.InputCombo(values=("NO", "YES"), default_value=self.LapChart.iloc[lap, 6], size=(15, 4), key='_PITMENU_',
+            [sg.Text(float(self.LapChart.iloc[lap, 4]), size=(10, 1), justification='center', key="_FUELREMAINING", enable_events=True)] +
+            [sg.InputCombo(values=("NO", "YES"), default_value=self.LapChart.iloc[lap, 6], size=(5, 4), key='_PITMENU_',
                            enable_events=True)] +
-            [sg.Text(self.LapChart.iloc[lap, 7], size=(15, 1), justification='right', key="_PITLANETIME_",
+            [sg.Text(self.LapChart.iloc[lap, 7], size=(10, 1), justification='right', key="_PITLANETIME_",
                      enable_events=True)] +
-            [sg.Text(self.LapChart.iloc[lap, 8], size=(8, 1), justification='right', key="_FUELADDED_",
+            [sg.Text(self.LapChart.iloc[lap, 8], size=(10, 1), justification='right', key="_FUELADDED_",
                      enable_events=True)] +
-            [sg.InputCombo(values=("NO", "YES"), default_value=self.LapChart.iloc[lap, 9], size=(15, 4), key='_CHANGETYRE_',
+            [sg.InputCombo(values=("NO", "YES"), default_value=self.LapChart.iloc[lap, 9], size=(10, 4), key='_CHANGETYRE_',
                            enable_events=True)]
 
             for lap in range(self.totalLapNumber)]
 
         # ------ Window Layout ------
         layout = [
-            [sg.Image(r'/Users/salvo/Desktop/GT Sport/LogoSI.png')],
-            [sg.Text('GT Sport Pit Strategy Calculator', size=(35, 1), justification='center', font=("Helvetica", 25))],
-            [sg.Col(columm_layout, scrollable=True)],
+            [sg.Image(r'/Users/salvo/Desktop/GT Sport/LogoSI.png')] +
+            [sg.Text('GT Sport\n Pit Strategy Calculator', size=(20, -3), justification='center', font=("Helvetica", 25))],
             [sg.Frame(layout=[
-                [sg.Text('Total Race Time:', )],
                 [sg.Text('Total Number of Pit Stops: ' + str(len(self.pitLaps)))],
                 [sg.Text('Total Pit Time: ' + self.totalPitLaneTime_original)],
             ],
                 title='Race Information', title_color='red', relief=sg.RELIEF_SUNKEN)],
             [sg.Frame(layout=[
-                [sg.Text(((self.LapChart['FuelRemaining'] < 100).all()) and ((self.LapChart['FuelRemaining'] > 0).all()) and ((self.LapChart['FuelRemaining'] < 100).all()) and ((self.LapChart['FuelRemaining'] > 0).all()))],
+                [sg.Text(((self.LapChart['FuelRemaining'] < 100).all()) and (
+                    (self.LapChart['FuelRemaining'] > 0).all()) and ((self.LapChart['FuelRemaining'] < 100).all()) and (
+                             (self.LapChart['FuelRemaining'] > 0).all()))],
             ],
-                title='Valid Strategy', title_color='green', relief=sg.RELIEF_SUNKEN)],
+                title='Valid Strategy', title_color='green', relief=sg.RELIEF_SUNKEN)] +
 
-            [sg.Button('Calculate'), sg.Cancel()],
-
+            [sg.Button('Update'), sg.Cancel('Cancel'), sg.Button('Reset')],
+            [sg.Text('Lap', size=(7, 1), justification='right', font=("Helvetica", 12))] +
+            [sg.Text('Engine\n Map', size=(10, 2), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('Fuel\n per Lap', size=(10, 2), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('Fuel\n Remaining', size=(8, 2), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('Pit', size=(10, 1), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('PitLane Time', size=(15, 1), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('Fuel to add', size=(13, 1), justification='center', font=("Helvetica", 12))] +
+            [sg.Text('Change Tyre', size=(11, 1), justification='center', font=("Helvetica", 12))]
+            ,
+            [sg.Col(columm_layout, scrollable=True)],
         ]
         # ------ Create Window ------
         self.window = sg.Window('Gt Sport Fuel Strategy Calculator', layout,
                            font='Courier 15',
-                           location=(100, 100),
+                           location=(360, 100),
                            finalize=True
                            )
         # ------ Event Loop ------
 
         while True:
             event, values = self.window.read()
-            if event == "Calculate":
+            if event == "Update":
                 self.window.close()
                 operations.updateChart(self, values)
+            if event == "Reset":
+                self.window.close()
+                inputWindow()
             if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
                 break
 
@@ -308,7 +312,7 @@ def inputWindow():
             [sg.Text('Total Race Laps'), sg.InputText('30', key="TotalLapNumber", size=(8, 10), justification='Right')],
             [sg.Text('Circuit'),
              sg.InputOptionMenu(('Menu Option 1', 'Menu Option 2', 'Menu Option 3'), key='Circuit')],
-            [sg.Text('Pit Lane Time (in ss.mmm)'), sg.InputText('12.345', key="PitLaneTime", size=(10, 1))],
+            [sg.Text('Pit Lane Time (in ss.mmm)'), sg.InputText('12.345', key="PitLaneTime", size=(8, 1))],
             [sg.Text('Initial Fuel Level'), sg.InputText('50', key="InitialFuelRace", size=(8, 1), justification='Right')],
             [sg.Text('Predicted number of Pit Stops'), sg.InputText('', key="PredictedPitStop", size=(8, 1), justification='Right')]
             ,
@@ -322,7 +326,7 @@ def inputWindow():
                 [sg.Text('Final Fuel Level (in litres)'), sg.InputText('5', key="FinalFuelTest", size=(8, 1), justification='Right')],
             ],
                 title='Test Information', title_color='red', relief=sg.RELIEF_SUNKEN)],
-        [sg.Submit(tooltip='Calcola'), sg.Cancel()],
+        [sg.Submit(tooltip='Calcola'), sg.Cancel("Cancel")],
     ]
 
     window = sg.Window('GT Sport Pit Strategy Calculator', layout, default_element_size=(40, 1), grab_anywhere=False)
@@ -331,6 +335,7 @@ def inputWindow():
         if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
             break
         if event == 'Submit':
+            window.close()
             operations(values)
 
 inputWindow()
