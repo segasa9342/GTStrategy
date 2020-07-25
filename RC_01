@@ -230,7 +230,7 @@ class operations():
 
         # ------ Window Layout ------
         layout = [
-            [sg.Image(r'/Users/salvo/Desktop/GT Sport/LogoSI.png')] +
+            [sg.Image(r'PATH/TO/SCUDERIA/ITALIA/LOGO')] + 
             [sg.Text('GT Sport\n Pit Strategy Calculator', size=(20, -3), justification='center', font=("Helvetica", 25))],
             [sg.Frame(layout=[
                 [sg.Text('Total Number of Pit Stops: ' + str(len(self.pitLaps)))],
